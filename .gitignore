@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Datasets (DO NOT PUSH)
+datasets/**/data.npz
+datasets/**/adj_mx.pkl
+datasets/**/sensor_locations.csv
+
+# Results
+results/*.pth
+results/*.pt
+
+# OS
+.DS_Store
+Thumbs.db
