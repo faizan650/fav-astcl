@@ -1,11 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from exogenous import ExogenousEncoder
 
 
-# -------------------------------------------------
-# Learnable Context Selector
-# -------------------------------------------------
 class LearnableContextSelector(nn.Module):
     def __init__(self, in_dim, hidden_dim):
         super().__init__()
@@ -13,79 +11,67 @@ class LearnableContextSelector(nn.Module):
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
 
     def forward(self, x):
-        # x: (B, T, N, F)
-        x = x.mean(dim=1)                 # (B, N, F)
-        h = F.relu(self.fc1(x))
-        h = self.fc2(h)                   # (B, N, H)
+        # x: (B, T, N, 1)
+        x = x.mean(dim=1)  # (B, N, 1)
+        h = self.fc2(F.relu(self.fc1(x)))
         sim = torch.matmul(h, h.transpose(1, 2))
         return F.softmax(sim, dim=-1)
 
 
-# -------------------------------------------------
-# FAV-ASTCL Model (Improved)
-# -------------------------------------------------
 class FAV_ASTCL(nn.Module):
-    def __init__(self, in_dim, hidden_dim, pred_len, adj, top_k=10):
+    def __init__(self, adj):
         super().__init__()
 
-        self.top_k = top_k
-
-        # Base adjacency
-        self.register_buffer(
-            "adj",
-            torch.tensor(adj, dtype=torch.float32)
-        )
-
-        # Learnable fusion gate
         self.alpha = nn.Parameter(torch.tensor(0.1))
+        self.register_buffer("adj", adj)
 
-        self.context = LearnableContextSelector(in_dim, hidden_dim)
+        self.context = LearnableContextSelector(1, 64)
 
-        # Temporal encoder
-        self.encoder = nn.GRU(
-            input_size=in_dim,
-            hidden_size=hidden_dim,
-            batch_first=True
+        # Exogenous
+        self.exo_encoder = ExogenousEncoder(6, 64)
+        self.exo_gate = nn.Linear(64, 64)
+
+        # GRU expects 1 (traffic) + 64 (exo)
+        self.encoder = nn.GRU(1 + 64, 64, batch_first=True)
+        self.decoder = nn.Linear(64, 3)
+
+        # Adapter for online correction
+        self.adapter = nn.Sequential(
+            nn.Linear(64, 64),
+            nn.ReLU(),
+            nn.Linear(64, 64)
         )
 
-        self.decoder = nn.Linear(hidden_dim, pred_len)
-
-    def forward(self, x):
+    def forward(self, x, exo):
         """
-        x: (B, T, N, F)
-        return: (B, N, T_out)
+        x   : (B, T, N, 1)
+        exo : (B, T, E)
         """
+        B, T, N, _ = x.shape
 
-        # -----------------------------
-        # Adaptive context graph
-        # -----------------------------
-        A_learned = self.context(x)  # (B, N, N)
+        # -------- Adaptive Graph --------
+        A_dyn = self.context(x)
+        A = torch.sigmoid(self.alpha) * A_dyn + (1 - torch.sigmoid(self.alpha)) * self.adj
 
-        # -------- Sparse Top-K neighbors --------
-        k = min(self.top_k, A_learned.size(-1))
-        topk = torch.topk(A_learned, k, dim=-1)
-        mask = torch.zeros_like(A_learned)
-        mask.scatter_(-1, topk.indices, 1.0)
-        A_learned = A_learned * mask
+        x = torch.einsum("bnm,btmf->btnf", A, x)  # (B, T, N, 1)
 
-        # -------- Gated fusion --------
-        alpha = torch.sigmoid(self.alpha)
-        A = alpha * A_learned + (1 - alpha) * self.adj
+        # -------- Exogenous Encoding --------
+        exo_emb = self.exo_encoder(exo)           # (B, T, 64)
+        exo_emb = exo_emb.unsqueeze(2).repeat(1, 1, N, 1)  # (B, T, N, 64)
 
-        # -----------------------------
-        # Spatial aggregation + residual
-        # -----------------------------
-        x_res = x
-        x = torch.einsum("bnm,btmf->btnf", A, x)
-        x = x + x_res
+        gate = torch.sigmoid(self.exo_gate(exo_emb))
+        exo_mod = gate * exo_emb                  # (B, T, N, 64)
 
-        # -----------------------------
-        # Temporal modeling
-        # -----------------------------
-        B, T, N, F = x.shape
-        x = x.permute(0, 2, 1, 3).reshape(B * N, T, F)
+        # -------- CONCAT (IMPORTANT FIX) --------
+        x = torch.cat([x, exo_mod], dim=-1)       # (B, T, N, 65)
 
-        _, h = self.encoder(x)
-        out = self.decoder(h.squeeze(0))
+        # -------- Temporal Modeling --------
+        x = x.permute(0, 2, 1, 3).reshape(B * N, T, 65)
 
+        _, h = self.encoder(x)                    # (1, B*N, 64)
+        h = h.squeeze(0)
+
+        h = h + self.adapter(h)
+
+        out = self.decoder(h)                     # (B*N, 3)
         return out.view(B, N, -1)
