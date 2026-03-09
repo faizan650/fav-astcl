@@ -17,4 +17,9 @@ Please download them separately and place them under `datasets/`.
 
 ## Usage
 ```bash
+
+- In run_live.py enter your personal API keys
+- for execution:
+```python src/live/run_live.py
+
 python src/train.py
