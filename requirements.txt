@@ -4,3 +4,5 @@ scikit-learn
 tqdm
 pandas
 requests
+flask
+flask-cors

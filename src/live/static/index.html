@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAV-ASTCL | Smart Traffic Dashboard</title>
+    <meta name="description" content="Real-time traffic speed prediction dashboard powered by FAV-ASTCL deep learning model for Hyderabad city sensors.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ============== HEADER ============== -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="14" stroke="url(#grad)" stroke-width="2.5"/>
+                    <circle cx="16" cy="10" r="3" fill="#818cf8"/>
+                    <circle cx="10" cy="20" r="3" fill="#34d399"/>
+                    <circle cx="22" cy="20" r="3" fill="#f472b6"/>
+                    <line x1="16" y1="13" x2="10" y2="17" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="16" y1="13" x2="22" y2="17" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="10" y1="20" x2="22" y2="20" stroke="#475569" stroke-width="1.5"/>
+                    <defs><linearGradient id="grad" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#818cf8"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs>
+                </svg>
+            </div>
+            <div>
+                <h1>FAV-ASTCL</h1>
+                <p class="subtitle">Smart Traffic Prediction Dashboard</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="live-badge" id="live-badge">
+                <span class="live-dot"></span>
+                LIVE
+            </div>
+            <div class="clock" id="clock">--:--:--</div>
+            <div class="refresh-info" id="refresh-info">Refreshing in <span id="countdown">30</span>s</div>
+        </div>
+    </header>
+
+    <!-- ============== CONTEXT BAR ============== -->
+    <section class="context-bar" id="context-bar">
+        <div class="context-card">
+            <span class="context-icon">🌡️</span>
+            <div>
+                <span class="context-label">Temperature</span>
+                <span class="context-value" id="ctx-temp">--°C</span>
+            </div>
+        </div>
+        <div class="context-card">
+            <span class="context-icon">💧</span>
+            <div>
+                <span class="context-label">Humidity</span>
+                <span class="context-value" id="ctx-humidity">--%</span>
+            </div>
+        </div>
+        <div class="context-card">
+            <span class="context-icon">💨</span>
+            <div>
+                <span class="context-label">Wind</span>
+                <span class="context-value" id="ctx-wind">-- km/h</span>
+            </div>
+        </div>
+        <div class="context-card">
+            <span class="context-icon">🕐</span>
+            <div>
+                <span class="context-label">Hour</span>
+                <span class="context-value" id="ctx-hour">--</span>
+            </div>
+        </div>
+        <div class="context-card">
+            <span class="context-icon">📅</span>
+            <div>
+                <span class="context-label">Day</span>
+                <span class="context-value" id="ctx-day">--</span>
+            </div>
+        </div>
+        <div class="context-card">
+            <span class="context-icon">🏖️</span>
+            <div>
+                <span class="context-label">Weekend</span>
+                <span class="context-value" id="ctx-weekend">--</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============== SENSOR GRID ============== -->
+    <main class="sensor-grid" id="sensor-grid">
+        <!-- Cards injected by JS -->
+        <div class="loading-state" id="loading-state">
+            <div class="spinner"></div>
+            <p>Connecting to prediction engine…</p>
+        </div>
+    </main>
+
+    <!-- ============== FOOTER ============== -->
+    <footer id="app-footer">
+        <p>🚀 FAV-ASTCL &mdash; Forecasting-Aware &amp; Versatile Adaptive Spatio-Temporal Context Learning</p>
+        <p class="footer-sub">Last updated: <span id="last-updated">--</span></p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
