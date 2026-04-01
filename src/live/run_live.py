@@ -15,8 +15,8 @@ from model import FAV_ASTCL
 # 🔑 CONFIG
 # =====================================================
 
-TOMTOM_API_KEY = "XgRR1pB0yE18lITkmlfVJgmtBZX3EIj2"
-WEATHER_API_KEY = "0be9c9c8dc7b4414af960654262502"
+TOMTOM_API_KEY = "xxxxxx"
+WEATHER_API_KEY = "xxxxx"
 
 SIMULATE = True   # ⚠ Set True if TomTom 403 error
 
