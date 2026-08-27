@@ -11,7 +11,7 @@ The core idea is that traffic is a "contextual" problem. You can't just look at 
 
 ### 1. Dynamics over Distance (The Graph Problem)
 Traditional maps use physical distance. We implemented a **Learnable Context Selector**. 
-- It uses a blend of a static map ($A_{static}$) and a generated similarity matrix ($A_{dyn}$).
+- It uses a blend of a static map ($A_{static}$) sssand a generated similarity matrix ($A_{dyn}$).
 - The model chooses how much to trust each one using a learnable $\alpha$ parameter. 
 - During a jam at **Hitech City**, the model effectively "re-routes" its attention by updating this matrix every 5 minutes.
 
